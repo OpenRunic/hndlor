@@ -16,15 +16,15 @@ type TestLoginCredentials struct {
 func CreateMethodTestRouter() *hndlor.MuxRouter {
 	r := CreateTestRouter()
 
-	r.Handle("GET /hello/{name}", hndlor.New(func(name string) (hndlor.Json, error) {
-		return hndlor.Json{
+	r.Handle("GET /hello/{name}", hndlor.New(func(name string) (hndlor.JSON, error) {
+		return hndlor.JSON{
 			"message": fmt.Sprintf("Hello %s!", name),
 		}, nil
 	}, hndlor.Path[string]("name")))
 
 	authGroup := CreateTestRouter("/auth")
-	authGroup.Handle("POST /login", hndlor.New(func(creds TestLoginCredentials) (hndlor.Json, error) {
-		return hndlor.Json{
+	authGroup.Handle("POST /login", hndlor.New(func(creds TestLoginCredentials) (hndlor.JSON, error) {
+		return hndlor.JSON{
 			"username": creds.Username,
 			"password": creds.Password,
 		}, nil
@@ -47,7 +47,7 @@ func TestGetRoute(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	} else {
-		var data hndlor.Json
+		var data hndlor.JSON
 		err := RunTestResultDecode(response, &data)
 		if err != nil {
 			t.Error(err)
@@ -64,7 +64,7 @@ func TestPostRoute(t *testing.T) {
 		Password: "pass",
 	}
 
-	res, err := RunTestJsonRequest(r, "POST", "/auth/login", sampleLoginData)
+	res, err := RunTestJSONRequest(r, "POST", "/auth/login", sampleLoginData)
 	if err != nil {
 		t.Fatal(err)
 	}

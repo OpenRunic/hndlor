@@ -18,8 +18,8 @@ func CreateMiddlewareTestRouter() *hndlor.MuxRouter {
 		next.ServeHTTP(w, hndlor.PatchValue(r, "authToken", token))
 		return nil
 	}))
-	r.Handle("GET /me", hndlor.New(func(token string) (hndlor.Json, error) {
-		return hndlor.Json{
+	r.Handle("GET /me", hndlor.New(func(token string) (hndlor.JSON, error) {
+		return hndlor.JSON{
 			"token": token,
 		}, nil
 	}, hndlor.Context[string]("authToken")))
@@ -42,7 +42,7 @@ func TestRouteMiddleware(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	} else {
-		var data hndlor.Json
+		var data hndlor.JSON
 		err := RunTestResultDecode(response, &data)
 		if err != nil {
 			t.Error(err)

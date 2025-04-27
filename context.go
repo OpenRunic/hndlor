@@ -11,17 +11,17 @@ type ContextValue int
 
 const (
 	ContextValueDefault ContextValue = iota // default context key for data
-	ContextValueJson
+	ContextValueJSON
 )
 
-// GetAllData retrieves saved [JsonData] saved in default context data
-func GetAllData(r *http.Request) Json {
-	var data Json
+// GetAllData retrieves saved [JSON] saved in default context data
+func GetAllData(r *http.Request) JSON {
+	var data JSON
 	raw := r.Context().Value(ContextValueDefault)
 	if raw == nil {
-		data = Json{}
+		data = JSON{}
 	} else {
-		data = raw.(Json)
+		data = raw.(JSON)
 	}
 
 	return data
@@ -45,8 +45,8 @@ func PatchValue(r *http.Request, key string, value any) *http.Request {
 	return Patch(r, ContextValueDefault, data)
 }
 
-// PatchValue writes [JsonData] to default context data
-func PatchMap(r *http.Request, value Json) *http.Request {
+// PatchValue writes [JSON] to default context data
+func PatchMap(r *http.Request, value JSON) *http.Request {
 	data := GetAllData(r)
 	maps.Copy(data, value)
 

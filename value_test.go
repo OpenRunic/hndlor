@@ -11,7 +11,7 @@ import (
 )
 
 func TestValueResolve(t *testing.T) {
-	body := hndlor.Json{
+	body := hndlor.JSON{
 		"username": "admin",
 		"password": "pass",
 	}
@@ -23,7 +23,7 @@ func TestValueResolve(t *testing.T) {
 		t.Error(err)
 	} else {
 		req.SetPathValue("uid", "100")
-		req.Header.Set("Content-Type", hndlor.ContentTypeJson)
+		req.Header.Set("Content-Type", hndlor.ContentTypeJSON)
 		req.Header.Set("x-api-token", "xyz")
 		req, _ = hndlor.PrepareBody(hndlor.PatchValue(req, "identifier", "sample-iden"))
 
@@ -34,10 +34,10 @@ func TestValueResolve(t *testing.T) {
 			hndlor.Path[string]("uid"),
 			hndlor.Header[string]("X-Api-Token").As("token"),
 			hndlor.Context[string]("identifier"),
-			hndlor.Reader(func(r *http.Request) (int, error) {
+			hndlor.Reader(func(_ *http.Request) (int, error) {
 				return 10, nil
 			}).As("rank"),
-			hndlor.Struct[TestLoginCredentials]().As("login").Validate(func(r *http.Request, tlc TestLoginCredentials) error {
+			hndlor.Struct[TestLoginCredentials]().As("login").Validate(func(_ *http.Request, tlc TestLoginCredentials) error {
 				if len(tlc.Username) > 0 {
 					return nil
 				}

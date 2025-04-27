@@ -33,8 +33,8 @@ rAuth.Handle(
   hndlor.New(
 
     // automatically injected into callback
-    func(creds Credentials) (hndlor.Json, error) {
-      return hndlor.Json{
+    func(creds Credentials) (hndlor.JSON, error) {
+      return hndlor.JSON{
         "username": creds.Username,
         "password": creds.Password,
       }, nil
@@ -115,8 +115,8 @@ sub.MountTo(r)
 hn := hndlor.New(
 
   // resolved values automatically injected into callback
-  func(v1 string, v2 int, v3 string) (hndlor.Json, error) {
-    return hndlor.Json{}, nil
+  func(v1 string, v2 int, v3 string) (hndlor.JSON, error) {
+    return hndlor.JSON{}, nil
   },
 
   // value resolvers: refer to `Values` section
@@ -165,7 +165,7 @@ vr := hndlor.Struct[Credentials]().As("credentials").
     return errors.New("unable to resolve login credentials")
   })
 
-// collect multiple values at once as [hndlor.Json]
+// collect multiple values at once as [hndlor.JSON]
 values, err := hndlor.Values(*http.Request,
   vr1,
   vr2,
@@ -196,10 +196,10 @@ err := hndlor.StructToStruct(map[string]any{
   "user": "admin",
 }, &data)
 
-// [hndlor.Json] for reference
-type Json map[string]any
+// [hndlor.JSON] for reference
+type JSON map[string]any
 
-// write [hndlor.Json] to io.Writer | http.ResponseWriter
+// write [hndlor.JSON] to io.Writer | http.ResponseWriter
 hndlor.WriteData(data)
 
 // write error to io.Writer | http.ResponseWriter
@@ -208,23 +208,23 @@ hndlor.WriteError(error)
 // write error message
 hndlor.WriteErrorMessage("authentication failed...")
 
-// Custom Context Value is stored as [hndlor.Json] with key
+// Custom Context Value is stored as [hndlor.JSON] with key
 // hndlor.ContextValueDefault
 
 // write custom context value
 req := hndlor.PatchValue(*http.Request, "gatewayToken", "0x010")
 
 // write multiple context value
-req := hndlor.PatchMap(*http.Request, hndlor.Json)
+req := hndlor.PatchMap(*http.Request, hndlor.JSON)
 
 // read custom context value
 val, err := hndlor.GetData[T](*http.Request, key, fallbackValue)
 
-// read all custom context values saved as [hndlor.Json]
+// read all custom context values saved as [hndlor.JSON]
 val, err := hndlor.GetAllData(*http.Request)
 
-// get all cached [hndlor.Json] body data from request
-bodyJson := hndlor.BodyJson(*http.Request)
+// get all cached [hndlor.JSON] body data from request
+bodyJSON := hndlor.BodyJSON(*http.Request)
 
 // get single body value from cached body data
 username, ok := hndlor.BodyRead(*http.Request, "username")

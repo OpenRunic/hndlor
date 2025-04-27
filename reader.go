@@ -34,7 +34,7 @@ func ReadValue[T any](tp reflect.Type, value any, fb T) (T, error) {
 		}
 		return any(val).(T), nil
 	case reflect.String:
-		return any(value).(T), nil
+		return value.(T), nil
 	}
 
 	return fb, nil

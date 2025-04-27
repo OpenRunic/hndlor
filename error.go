@@ -13,8 +13,8 @@ type AsExportableResponse interface {
 	// ResponseStatus returns the http status code
 	ResponseStatus() int
 
-	// ResponseJson exports the error as json data
-	ResponseJson() Json
+	// ResponseJSON exports the error as json data
+	ResponseJSON() JSON
 }
 
 // ResponseError defines struct with error message and extras
@@ -42,7 +42,7 @@ type ResponseError struct {
 	clientMessage string
 
 	// extra data to export
-	extras Json
+	extras JSON
 }
 
 // Status updates the status code for response
@@ -70,7 +70,7 @@ func (e *ResponseError) Path(p string) *ResponseError {
 }
 
 // Data updates the extra data for response
-func (e *ResponseError) Extras(d Json) *ResponseError {
+func (e *ResponseError) Extras(d JSON) *ResponseError {
 	e.extras = d
 	return e
 }
@@ -125,9 +125,9 @@ func (e *ResponseError) Message() string {
 	return e.message
 }
 
-// AsJson generates json data for export
-func (e *ResponseError) AsJson() Json {
-	res := Json{
+// AsJSON generates json data for export
+func (e *ResponseError) AsJSON() JSON {
+	res := JSON{
 		"error": e.message,
 	}
 
@@ -149,8 +149,8 @@ func (e ResponseError) ResponseStatus() int {
 	return e.statusCode
 }
 
-func (e ResponseError) ResponseJson() Json {
-	res := e.AsJson()
+func (e ResponseError) ResponseJSON() JSON {
+	res := e.AsJSON()
 	if e.serverError {
 		if len(e.clientMessage) > 0 {
 			res["error"] = e.clientMessage

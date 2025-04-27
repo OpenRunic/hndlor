@@ -10,10 +10,10 @@ import (
 )
 
 // ContentType of json
-const ContentTypeJson = "application/json"
+const ContentTypeJSON = "application/json"
 
 // ContentType of url encoded form
-const ContentTypeUrlEncoded = "application/x-www-form-urlencoded"
+const ContentTypeURLEncoded = "application/x-www-form-urlencoded"
 
 // ContentType of multipart
 const ContentTypeMultipart = "multipart/form-data"
@@ -35,35 +35,35 @@ func PrepareBody(r *http.Request) (*http.Request, error) {
 				return nil, err
 			}
 
-		case cType == ContentTypeUrlEncoded:
+		case cType == ContentTypeURLEncoded:
 			err := r.ParseForm()
 			if err != nil {
 				return nil, err
 			}
 
-		case cType == ContentTypeJson, cType == "":
-			eJson := BodyJson(r)
-			if eJson != nil {
+		case cType == ContentTypeJSON, cType == "":
+			eJSON := BodyJSON(r)
+			if eJSON != nil {
 				return r, nil
 			}
 
-			var data Json
+			var data JSON
 			err := json.NewDecoder(r.Body).Decode(&data)
 			if err != nil {
 				return nil, err
 			}
-			return Patch(r, ContextValueJson, data), nil
+			return Patch(r, ContextValueJSON, data), nil
 		}
 	}
 
 	return r, nil
 }
 
-// BodyJson reads the loaded json data from request context
-func BodyJson(r *http.Request) Json {
-	raw := r.Context().Value(ContextValueJson)
+// BodyJSON reads the loaded json data from request context
+func BodyJSON(r *http.Request) JSON {
+	raw := r.Context().Value(ContextValueJSON)
 	if raw != nil {
-		return raw.(Json)
+		return raw.(JSON)
 	}
 	return nil
 }
@@ -74,13 +74,14 @@ func BodyRead(r *http.Request, key string) (any, bool) {
 		return r.FormValue(key), true
 	} else if r.PostForm != nil && r.PostForm.Has(key) {
 		return r.PostFormValue(key), true
-	} else {
-		data := BodyJson(r)
-		if data != nil {
-			v, ok := data[key]
-			return v, ok
-		}
 	}
+
+	data := BodyJSON(r)
+	if data != nil {
+		v, ok := data[key]
+		return v, ok
+	}
+
 	return "", false
 }
 
@@ -90,8 +91,8 @@ func BodyReadStruct[T any](r *http.Request, data T) error {
 
 	if HasBody(r) {
 		cType := r.Header.Get("Content-Type")
-		if cType == ContentTypeJson {
-			jData := BodyJson(r)
+		if cType == ContentTypeJSON {
+			jData := BodyJSON(r)
 			if jData == nil {
 				return err
 			}

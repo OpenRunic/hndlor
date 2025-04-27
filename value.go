@@ -116,11 +116,8 @@ func (v *Value[T]) Reader(cb func(*http.Request) (T, error)) *Value[T] {
 
 // readValue reads the value from *[http.Request] for provided [ValueSource]
 func (v *Value[T]) readValue(r *http.Request, src ValueSource) (T, error) {
-	asStruct := false
-	if v.rType.Kind() == reflect.Struct ||
-		(v.rType.Kind() == reflect.Ptr && v.rType.Elem().Kind() == reflect.Struct) {
-		asStruct = true
-	}
+	asStruct := (v.rType.Kind() == reflect.Struct ||
+		(v.rType.Kind() == reflect.Ptr && v.rType.Elem().Kind() == reflect.Struct))
 
 	if asStruct {
 		var data T
@@ -237,9 +234,9 @@ func (v Value[T]) Resolve(r *http.Request) (any, error) {
 	if err != nil {
 		if v.required {
 			return v.rDefault, err
-		} else {
-			return v.rDefault, nil
 		}
+
+		return v.rDefault, nil
 	}
 
 	if v.validate != nil {
@@ -305,8 +302,8 @@ func Reader[T any](cb func(*http.Request) (T, error)) *Value[T] {
 }
 
 // Values collects all provided values from *[http.Request]
-func Values(r *http.Request, values ...ValueResolver) (Json, error) {
-	res := make(Json)
+func Values(r *http.Request, values ...ValueResolver) (JSON, error) {
+	res := make(JSON)
 
 	for _, val := range values {
 		if len(val.Alias()) > 0 {

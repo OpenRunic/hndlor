@@ -35,7 +35,7 @@ func (h *Handler) Invalidate() error {
 				ins[i] = h.values[i].Type()
 			}
 			outs := []reflect.Type{
-				reflect.TypeOf(make(Json)),
+				reflect.TypeOf(make(JSON)),
 				reflect.TypeOf((*error)(nil)).Elem(),
 			}
 			ep := reflect.FuncOf(ins, outs, false)
@@ -65,9 +65,8 @@ func (h *Handler) Values(r *http.Request) ([]reflect.Value, error) {
 
 			if err != nil {
 				return nil, err
-			} else {
-				values[i] = reflect.ValueOf(value.Default())
 			}
+			values[i] = reflect.ValueOf(value.Default())
 		} else {
 			values[i] = reflect.ValueOf(val)
 		}
@@ -78,13 +77,13 @@ func (h *Handler) Values(r *http.Request) ([]reflect.Value, error) {
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if verr := h.Invalidate(); verr != nil {
-		WriteError(w, verr)
+		_ = WriteError(w, verr)
 		return
 	}
 
 	values, err := h.Values(r)
 	if err != nil {
-		WriteError(w, err)
+		_ = WriteError(w, err)
 		return
 	}
 
@@ -93,11 +92,11 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	data, rerr := response[0].Interface(), response[1].Interface()
 
 	if rerr != nil {
-		WriteError(w, rerr.(error))
+		_ = WriteError(w, rerr.(error))
 		return
 	}
 
-	WriteData(w, data.(Json))
+	_ = WriteData(w, data.(JSON))
 }
 
 // New creates [Handler] and panics on mis-matched function
@@ -105,8 +104,8 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //
 // Example: reads query string 'name' and passes as func argument
 //
-//	mux.Handle("GET /hello", hndlor.New(func(name string) (hndlor.Json, error) {
-//		return hndlor.Json{
+//	mux.Handle("GET /hello", hndlor.New(func(name string) (hndlor.JSON, error) {
+//		return hndlor.JSON{
 //			"hello": name,
 //		}, nil
 //	}, hndlor.Get[string]("name")))

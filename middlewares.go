@@ -35,7 +35,7 @@ func PrepareMux() NextHandler {
 	return M(func(w http.ResponseWriter, r *http.Request, next http.Handler) {
 		nr, err := PrepareBody(r)
 		if err != nil {
-			WriteError(w, Error(err.Error()).Server().Status(http.StatusUnprocessableEntity))
+			_ = WriteError(w, Error(err.Error()).Server().Status(http.StatusUnprocessableEntity))
 		} else {
 			next.ServeHTTP(w, nr)
 		}

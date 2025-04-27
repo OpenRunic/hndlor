@@ -30,7 +30,7 @@ func MM(fn MiddlewareWithError) NextHandler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			err := fn(w, r, next)
 			if err != nil {
-				WriteError(w, err)
+				_ = WriteError(w, err)
 			}
 		})
 	}

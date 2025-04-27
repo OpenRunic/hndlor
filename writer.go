@@ -8,16 +8,16 @@ import (
 	"net/http"
 )
 
-// Json represents json data format
-type Json map[string]any
+// JSON represents json data format
+type JSON map[string]any
 
 // AsLoggable defines interface to check if struct is loggable
 type AsLoggable interface {
 	Log(io.Writer)
 }
 
-// WriteData writes [JsonData] to [io.Writer]
-func WriteData(w io.Writer, data Json) error {
+// WriteData writes [JSON] to [io.Writer]
+func WriteData(w io.Writer, data JSON) error {
 	bt, e := json.Marshal(data)
 	if e != nil {
 		return e
@@ -28,16 +28,16 @@ func WriteData(w io.Writer, data Json) error {
 }
 
 // WriteError writes [error] to [io.Writer] and tries
-// to use [AsJsonError] when available
+// to use [AsExportableResponse] when available
 func WriteError(w io.Writer, err error) error {
-	var data Json
+	var data JSON
 	statusCode := 0
 	ex, ok := err.(AsExportableResponse)
 	if ok {
-		data = ex.ResponseJson()
+		data = ex.ResponseJSON()
 		statusCode = ex.ResponseStatus()
 	} else {
-		data = Json{
+		data = JSON{
 			"error": err.Error(),
 		}
 	}
@@ -55,7 +55,7 @@ func WriteError(w io.Writer, err error) error {
 
 // WriteError writes error message to [io.Writer]
 func WriteErrorMessage(w io.Writer, err string) error {
-	return WriteData(w, Json{
+	return WriteData(w, JSON{
 		"error": err,
 	})
 }

@@ -27,14 +27,14 @@ func RunTestRequestBody(r http.Handler, method string, path string, body io.Read
 	return res, nil
 }
 
-func RunTestJsonRequest(r http.Handler, method string, path string, data any) (*httptest.ResponseRecorder, error) {
+func RunTestJSONRequest(r http.Handler, method string, path string, data any) (*httptest.ResponseRecorder, error) {
 	bodyBytes, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
 	}
 
 	return RunTestRequestBody(r, method, path, bytes.NewBuffer(bodyBytes), func(req *http.Request) {
-		req.Header.Set("Content-Type", hndlor.ContentTypeJson)
+		req.Header.Set("Content-Type", hndlor.ContentTypeJSON)
 	})
 }
 
