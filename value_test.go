@@ -1,0 +1,51 @@
+package hndlor_test
+
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"testing"
+
+	"github.com/OpenRunic/hndlor"
+)
+
+func TestValueResolve(t *testing.T) {
+	body := hndlor.Json{
+		"username": "admin",
+		"password": "pass",
+	}
+	bodyBytes, _ := json.Marshal(body)
+
+	req, err := http.NewRequest("POST", "/?name=John", bytes.NewBuffer(bodyBytes))
+
+	if err != nil {
+		t.Error(err)
+	} else {
+		req.SetPathValue("uid", "100")
+		req.Header.Set("Content-Type", hndlor.ContentTypeJson)
+		req.Header.Set("x-api-token", "xyz")
+		req, _ = hndlor.PrepareBody(hndlor.PatchValue(req, "identifier", "sample-iden"))
+
+		_, err := hndlor.Values(req,
+			hndlor.Get[string]("name"),
+			hndlor.Get[string]("q").Optional(),
+			hndlor.Body[string]("username"),
+			hndlor.Path[string]("uid"),
+			hndlor.Header[string]("X-Api-Token").As("token"),
+			hndlor.Context[string]("identifier"),
+			hndlor.Reader(func(r *http.Request) (int, error) {
+				return 10, nil
+			}).As("rank"),
+			hndlor.Struct[TestLoginCredentials]().As("login").Validate(func(r *http.Request, tlc TestLoginCredentials) error {
+				if len(tlc.Username) > 0 {
+					return nil
+				}
+				return errors.New("unable to resolve login data")
+			}),
+		)
+		if err != nil {
+			t.Error(err)
+		}
+	}
+}
