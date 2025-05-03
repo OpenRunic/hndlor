@@ -252,10 +252,16 @@ func (v Value[T]) Resolve(r *http.Request) (any, error) {
 // NewValue define new value resolver instance
 func NewValue[T any](field string, src ValueSource) *Value[T] {
 	tp := reflect.TypeOf((*T)(nil)).Elem()
+
+	var def T
+	if tp.Kind() != reflect.Interface {
+		def = (reflect.New(tp).Elem().Interface()).(T)
+	}
+
 	return &Value[T]{
 		field:    field,
 		rType:    tp,
-		rDefault: (reflect.New(tp).Elem().Interface()).(T),
+		rDefault: def,
 		source:   src,
 		required: true,
 	}
@@ -299,31 +305,4 @@ func Context[T any](key string) *Value[T] {
 // Reader defines value resolver using custom reader
 func Reader[T any](cb func(*http.Request) (T, error)) *Value[T] {
 	return NewValue[T]("", ValueSourceDefault).Reader(cb)
-}
-
-// Values collects all provided values from *[http.Request]
-func Values(r *http.Request, values ...ValueResolver) (JSON, error) {
-	res := make(JSON)
-
-	for _, val := range values {
-		if len(val.Alias()) > 0 {
-			v, err := val.Resolve(r)
-			if err != nil {
-				return nil, err
-			}
-			res[val.Alias()] = v
-		}
-	}
-
-	return res, nil
-}
-
-// ValuesAs collects values and maps it to struct
-func ValuesAs(r *http.Request, data any, values ...ValueResolver) error {
-	vs, err := Values(r, values...)
-	if err != nil {
-		return err
-	}
-
-	return StructToStruct(vs, data)
 }

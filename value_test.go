@@ -43,6 +43,8 @@ func TestValueResolve(t *testing.T) {
 				}
 				return errors.New("unable to resolve login data")
 			}),
+			hndlor.ReadRequest().As("req"),
+			hndlor.ReadContext().As("context"),
 		)
 		if err != nil {
 			t.Error(err)
