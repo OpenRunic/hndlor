@@ -10,7 +10,18 @@ import (
 // lResponseWriter is a modified writer with logging info
 type lResponseWriter struct {
 	http.ResponseWriter
-	statusCode int
+	contentSize uint64
+	statusCode  int
+}
+
+func (w *lResponseWriter) Write(data []byte) (int, error) {
+	size, err := w.ResponseWriter.Write(data)
+	if err == nil {
+		w.contentSize = uint64(size)
+	} else {
+		w.contentSize = 0
+	}
+	return size, err
 }
 
 func (w *lResponseWriter) WriteHeader(code int) {
@@ -21,9 +32,15 @@ func (w *lResponseWriter) WriteHeader(code int) {
 // Logger middleware builds handler to log every requests received
 func Logger(lw io.Writer) NextHandler {
 	return M(func(w http.ResponseWriter, r *http.Request, next http.Handler) {
-		nw := &lResponseWriter{w, http.StatusOK}
+		nw := &lResponseWriter{w, 0, http.StatusOK}
 		defer func(st time.Time) {
-			fmt.Fprintf(lw, "[%s] %s - %s [%d]\n", r.Method, r.URL.Path, time.Since(st), nw.statusCode)
+			fmt.Fprintf(lw, "[%s] %s - (T %s, S %d, L %d)\n",
+				r.Method,
+				r.URL.Path,
+				time.Since(st),
+				nw.statusCode,
+				nw.contentSize,
+			)
 		}(time.Now())
 
 		next.ServeHTTP(nw, r)
