@@ -125,6 +125,17 @@ hn := hndlor.New(
   valueResolver3[string],
 )
 
+// handler with custom writer logic
+hn := hndlor.New(
+  func(w http.ResponseWriter, v1 string) {
+    hndlor.WriteData(w, hndlor.JSON{
+      "value": v1,
+    })
+  },
+  hndlor.HTTPResponseWriter(),
+  valueResolver1[string],
+)
+
 // custom callback for value resolve fail
 hn.OnFail(func(hndlor.ValueResolver, error) error)
 ```
