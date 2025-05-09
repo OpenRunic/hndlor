@@ -2,6 +2,7 @@ package hndlor_test
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
 	"testing"
 
@@ -21,6 +22,12 @@ func CreateMethodTestRouter() *hndlor.MuxRouter {
 			"message": fmt.Sprintf("Hello %s!", name),
 		}, nil
 	}, hndlor.Path[string]("name")))
+
+	r.Handle("GET /ping/{name}", hndlor.New(func(w http.ResponseWriter, name string) {
+		_ = hndlor.WriteData(w, hndlor.JSON{
+			"message": fmt.Sprintf("Pong to %s!", name),
+		})
+	}, hndlor.HTTPResponseWriter(), hndlor.Path[string]("name")))
 
 	authGroup := CreateTestRouter("/auth")
 	authGroup.Handle("POST /login", hndlor.New(func(creds TestLoginCredentials) (hndlor.JSON, error) {
@@ -47,12 +54,39 @@ func TestGetRoute(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	} else {
+		if response.Header.Get("Content-Type") != "application/json" {
+			t.Error("unable to resolve json response header")
+		}
+
 		var data hndlor.JSON
 		err := RunTestResultDecode(response, &data)
 		if err != nil {
 			t.Error(err)
 		} else if data["message"] != "Hello John!" {
 			t.Error("unable to resolve valid response data on GET")
+		}
+	}
+}
+
+func TestWriterAccessOnRoute(t *testing.T) {
+	r := CreateMethodTestRouter()
+
+	res, err := RunTestRequest(r, "GET", "/ping/John")
+	if err != nil {
+		t.Fatal(err)
+	}
+	response := res.Result()
+
+	err = InvalidateTestResultStatus(response, 200)
+	if err != nil {
+		t.Error(err)
+	} else {
+		var data hndlor.JSON
+		err := RunTestResultDecode(response, &data)
+		if err != nil {
+			t.Error(err)
+		} else if data["message"] != "Pong to John!" {
+			t.Error("unable to resolve valid response data on custom writer")
 		}
 	}
 }

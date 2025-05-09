@@ -27,14 +27,14 @@ func TestValueResolve(t *testing.T) {
 		req.Header.Set("x-api-token", "xyz")
 		req, _ = hndlor.PrepareBody(hndlor.PatchValue(req, "identifier", "sample-iden"))
 
-		_, err := hndlor.Values(req,
+		_, err := hndlor.Values(nil, req,
 			hndlor.Get[string]("name"),
 			hndlor.Get[string]("q").Optional(),
 			hndlor.Body[string]("username"),
 			hndlor.Path[string]("uid"),
 			hndlor.Header[string]("X-Api-Token").As("token"),
 			hndlor.Context[string]("identifier"),
-			hndlor.Reader(func(_ *http.Request) (int, error) {
+			hndlor.Reader(func(_ http.ResponseWriter, _ *http.Request) (int, error) {
 				return 10, nil
 			}).As("rank"),
 			hndlor.Struct[TestLoginCredentials]().As("login").Validate(func(_ *http.Request, tlc TestLoginCredentials) error {
@@ -43,8 +43,8 @@ func TestValueResolve(t *testing.T) {
 				}
 				return errors.New("unable to resolve login data")
 			}),
-			hndlor.ReadRequest().As("req"),
-			hndlor.ReadContext().As("context"),
+			hndlor.HTTPRequest().As("req"),
+			hndlor.HTTPContext().As("context"),
 		)
 		if err != nil {
 			t.Error(err)

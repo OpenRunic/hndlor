@@ -9,10 +9,11 @@ type ValueFailHandler func(ValueResolver, error) error
 
 // Handler defines struct for callback
 type Handler struct {
-	callback  any
-	Err       error
-	values    []ValueResolver
-	valueFail ValueFailHandler
+	callback   any
+	Err        error
+	zeroOutput bool
+	values     []ValueResolver
+	valueFail  ValueFailHandler
 }
 
 // OnFail defines callback when value resolve fails
@@ -39,9 +40,14 @@ func (h *Handler) Invalidate() error {
 				reflect.TypeOf((*error)(nil)).Elem(),
 			}
 			ep := reflect.FuncOf(ins, outs, false)
+			ep2 := reflect.FuncOf(ins, nil, false)
 
 			if tp != ep {
-				h.Err = Errorf("invalid handler function; expected [ %s ] got [ %s ]", ep, tp).Server()
+				if tp != ep2 {
+					h.Err = Errorf("invalid handler function; expected [ %s ] got [ %s ]", ep, tp).Server()
+				} else {
+					h.zeroOutput = true
+				}
 			}
 		}
 	}
@@ -50,13 +56,13 @@ func (h *Handler) Invalidate() error {
 }
 
 // Values resolves the dynamic handler values
-func (h *Handler) Values(r *http.Request) ([]reflect.Value, error) {
+func (h *Handler) Values(w http.ResponseWriter, r *http.Request) ([]reflect.Value, error) {
 	vLen := len(h.values)
 	values := make([]reflect.Value, vLen)
 
 	for i := range vLen {
 		value := h.values[i]
-		val, err := value.Resolve(r)
+		val, err := value.Resolve(w, r)
 
 		if err != nil {
 			if h.valueFail != nil {
@@ -81,7 +87,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	values, err := h.Values(r)
+	values, err := h.Values(w, r)
 	if err != nil {
 		_ = WriteError(w, err)
 		return
@@ -89,18 +95,21 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	vt := reflect.ValueOf(h.callback)
 	response := vt.Call(values)
-	data, rerr := response[0].Interface(), response[1].Interface()
 
-	if rerr != nil {
-		_ = WriteError(w, rerr.(error))
-		return
+	if !h.zeroOutput {
+		data, rerr := response[0].Interface(), response[1].Interface()
+
+		if rerr != nil {
+			_ = WriteError(w, rerr.(error))
+			return
+		}
+
+		_ = WriteData(w, data.(JSON))
 	}
-
-	_ = WriteData(w, data.(JSON))
 }
 
-// New creates [Handler] and panics on mis-matched function
-// signature based on provided callback
+// New creates [Handler] for handling response and
+// panics on invalid func signature
 //
 // Example: reads query string 'name' and passes as func argument
 //
@@ -110,15 +119,10 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //		}, nil
 //	}, hndlor.Get[string]("name")))
 func New(cb any, values ...ValueResolver) *Handler {
-	return &Handler{
+	h := &Handler{
 		callback: cb,
 		values:   values,
 	}
-}
-
-// NewP works same as [New] but panics on invalidation error
-func NewP(cb any, values ...ValueResolver) *Handler {
-	h := New(cb, values...)
 
 	if err := h.Invalidate(); err != nil {
 		panic(err)

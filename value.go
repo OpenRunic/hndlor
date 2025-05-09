@@ -36,7 +36,7 @@ type ValueResolver interface {
 	Required() bool
 
 	// Resolve evaluates and return the resulting value else error
-	Resolve(*http.Request) (any, error)
+	Resolve(http.ResponseWriter, *http.Request) (any, error)
 }
 
 // Value[T any] defines struct for resolving value from sources
@@ -55,7 +55,7 @@ type Value[T any] struct {
 	source ValueSource
 
 	// custom value reader
-	reader func(*http.Request) (T, error)
+	reader func(http.ResponseWriter, *http.Request) (T, error)
 
 	// validate value
 	validate func(*http.Request, T) error
@@ -109,7 +109,7 @@ func (v *Value[T]) Validate(cb func(*http.Request, T) error) *Value[T] {
 }
 
 // Reader stores custom value reader for value resolver
-func (v *Value[T]) Reader(cb func(*http.Request) (T, error)) *Value[T] {
+func (v *Value[T]) Reader(cb func(http.ResponseWriter, *http.Request) (T, error)) *Value[T] {
 	v.reader = cb
 	return v
 }
@@ -218,9 +218,9 @@ func (v Value[T]) readDefaultValue(r *http.Request) (T, error) {
 	return value, err
 }
 
-func (v Value[T]) Resolve(r *http.Request) (any, error) {
+func (v Value[T]) Resolve(w http.ResponseWriter, r *http.Request) (any, error) {
 	if v.reader != nil {
-		return v.reader(r)
+		return v.reader(w, r)
 	}
 
 	var value T
@@ -303,6 +303,6 @@ func Context[T any](key string) *Value[T] {
 }
 
 // Reader defines value resolver using custom reader
-func Reader[T any](cb func(*http.Request) (T, error)) *Value[T] {
+func Reader[T any](cb func(http.ResponseWriter, *http.Request) (T, error)) *Value[T] {
 	return NewValue[T]("", ValueSourceDefault).Reader(cb)
 }

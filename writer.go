@@ -23,6 +23,11 @@ func WriteData(w io.Writer, data JSON) error {
 		return e
 	}
 
+	rs, ok := w.(http.ResponseWriter)
+	if ok {
+		rs.Header().Add("Content-Type", "application/json")
+	}
+
 	_, e = w.Write(bt)
 	return e
 }
@@ -51,6 +56,13 @@ func WriteError(w io.Writer, err error) error {
 
 	LogError(log.Writer(), err)
 	return WriteData(w, data)
+}
+
+// WriteMessage writes message to [io.Writer]
+func WriteMessage(w io.Writer, msg string) error {
+	return WriteData(w, JSON{
+		"message": msg,
+	})
 }
 
 // WriteError writes error message to [io.Writer]

@@ -111,7 +111,7 @@ sub.MountTo(r)
 
 #### Handler
 ```go
-// handler that responds with error if callback signature is invalid
+// handler that panics on invalid callback signature
 hn := hndlor.New(
 
   // resolved values automatically injected into callback
@@ -123,11 +123,6 @@ hn := hndlor.New(
   valueResolver1[string],
   valueResolver2[int],
   valueResolver3[string],
-)
-
-// handler that panics on invalid callback signature
-hn := hndlor.NewP(
-  ...
 )
 
 // custom callback for value resolve fail
@@ -152,7 +147,7 @@ vr := hndlor.Header[string]("X-Api-Token").As("token")
 vr := hndlor.Context[string]("gatewayToken").Optional()
 
 // value resolver from custom reader
-vr := hndlor.Reader(func(r *http.Request) (string, error) {
+vr := hndlor.Reader(func(_ http.ResponseWriter, _ *http.Request) (string, error) {
   return "user-001-uid", nil
 }).As("uid")
 
@@ -166,7 +161,7 @@ vr := hndlor.Struct[Credentials]().As("credentials").
   })
 
 // collect multiple values at once as [hndlor.JSON]
-values, err := hndlor.Values(*http.Request,
+values, err := hndlor.Values(http.ResponseWriter, *http.Request,
   vr1,
   vr2,
   vr3,
@@ -176,13 +171,13 @@ values, err := hndlor.Values(*http.Request,
 
 // collect multiple values as struct
 var creds Credentials
-err := hndlor.ValuesAs(*http.Request, &creds,
+err := hndlor.ValuesAs(http.ResponseWriter, *http.Request, &creds,
   vr1,
   vr2,
 )
 
 // resolve single value
-q, err := vr.Resolve(*http.Request)
+q, err := vr.Resolve(http.ResponseWriter, *http.Request)
 ```
 
 #### Utility
