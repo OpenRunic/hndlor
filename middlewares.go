@@ -3,6 +3,7 @@ package hndlor
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -30,18 +31,50 @@ func (w *lResponseWriter) WriteHeader(code int) {
 }
 
 // Logger middleware builds handler to log every requests received
-func Logger(lw io.Writer) NextHandler {
+func Logger(lw any) NextHandler {
+	var ok bool
+	var target string
+	var writer io.Writer
+	var sLogger *slog.Logger
+
+	sLogger, ok = lw.(*slog.Logger)
+	if ok {
+		target = "slog"
+	} else {
+		writer, ok = lw.(io.Writer)
+		if ok {
+			target = "writer"
+		}
+	}
+
 	return M(func(w http.ResponseWriter, r *http.Request, next http.Handler) {
 		nw := &lResponseWriter{w, 0, http.StatusOK}
-		defer func(st time.Time) {
-			fmt.Fprintf(lw, "[%s] %s - (T %s, S %d, L %d)\n",
-				r.Method,
-				r.URL.Path,
-				time.Since(st),
-				nw.statusCode,
-				nw.contentSize,
-			)
-		}(time.Now())
+
+		if len(target) > 0 {
+			defer func(st time.Time) {
+				etime := time.Since(st)
+
+				switch target {
+				case "slog":
+					sLogger.Info(
+						"http request",
+						"method", r.Method,
+						"path", r.URL.Path,
+						"time_ms", etime,
+						"status", nw.statusCode,
+						"size", nw.contentSize,
+					)
+				case "writer":
+					fmt.Fprintf(writer, "[%s] %s - (T %s, S %d, L %d)\n",
+						r.Method,
+						r.URL.Path,
+						etime,
+						nw.statusCode,
+						nw.contentSize,
+					)
+				}
+			}(time.Now())
+		}
 
 		next.ServeHTTP(nw, r)
 	})
